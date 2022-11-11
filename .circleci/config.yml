@@ -168,7 +168,7 @@ jobs:
       - run:
           name: Deploy backend infrastructure
           command: |
-            cd files
+            cd .circleci\files
             aws cloudformation deploy \
               --template-file backend.yaml \
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -186,7 +186,7 @@ jobs:
       - run:
           name: Deploy frontend infrastructure
           command: |
-            cd files
+            cd .circleci\files
             aws cloudformation deploy \
               --template-file frontend.yaml \
               --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -195,7 +195,7 @@ jobs:
       - run:
           name: Add backend ip to ansible inventory
           command: |
-            cd ansible
+            cd .circleci\ansible
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
