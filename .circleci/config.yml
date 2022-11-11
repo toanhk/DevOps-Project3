@@ -203,30 +203,42 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-            - project/.circleci/ansible/backendip.txt
+            # - project/.circleci/ansible/backendip.txt
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
  
 
-  # configure-infrastructure:
-  #   docker:
-  #     # Docker image here that supports Ansible
-  #   steps:
-  #     # Checkout code from git
-  #     # Add ssh keys with fingerprint
-  #     # attach workspace
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           # Your code here
-  #           exit 1
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           # Your code here
-  #           exit 1
-  #     # Here's where you will add some code to rollback on failure      
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"] # You can get this ID in the section where you registered the SSH Key
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add tar
+            apk add gzip
+            apk add openssh-client
+            apk add curl
+            pip install awscli
+            apk add --update ansible
+      - run:
+          name: Configure server
+          command: |
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            echo $PWD
+            cat ~/project/.circleci/ansible/inventory.txt
+            cd ~/project/.circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
+      
+      # Here's where you will add some code to rollback on failure
+      - destroy-environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   # run-migrations:
   #   docker:
