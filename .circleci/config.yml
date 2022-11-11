@@ -360,7 +360,8 @@ workflows:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
-              only: circleci-projects-setup
+              only: 
+                - circleci-projects-setup
       # - configure-infrastructure:
       #     requires: [deploy-infrastructure]
       # - run-migrations:
