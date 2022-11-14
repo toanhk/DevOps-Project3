@@ -176,6 +176,7 @@ jobs:
               --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
       - run:
           name: Deploy frontend infrastructure
+          working_directory: ./.circleci/files
           command: |
             aws cloudformation deploy \
               --template-file frontend.yml \
