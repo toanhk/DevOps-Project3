@@ -339,7 +339,7 @@ jobs:
             cd .. 
             tar -C backend -czvf artifact.tar.gz .
 
-            ansible-playbook -i inventory deploy-backend.yml
+            ansible-playbook -i inventory .circleci/ansible/deploy-backend.yml
             sleep 30s
             
       ## Here's where you will add some code to rollback on failure  
