@@ -330,7 +330,6 @@ jobs:
             echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> backend/.env  
       - run:
           name: Deploy backend and run ansible
-          working_directory: ./.circleci/ansible
           command: |
             cd backend
             npm i
