@@ -10,20 +10,16 @@ commands:
         type: string
     steps:
       - run:
-          name: Destroy udapeople backend cfn stack
+          name: Destroy frontend
+          when: on_fail
           command: |
-            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.id >>
-          environment:
-            TERM: xterm-256color
-          when: << parameters.when >>
+            aws s3 rb s3://udapeople-<< parameters.workflow_id >> --force
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.workflow_id >>
       - run:
-          name: Destroy udapeople frontend cfn stack and S3 bucket
+          name: Destroy backend
+          when: on_fail
           command: |
-            aws s3 rm s3://udapeople-<< parameters.id >> --recursive
-            aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.id >>
-          environment:
-              TERM: xterm-256color
-          when: << parameters.when >>
+            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.workflow_id >>
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -35,16 +31,15 @@ commands:
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
-            if(( $SUCCESS==1 )); 
+            success_migration=$(curl --insecure https://kvdb.io/9GE4jRtKznmVKRfvdBABBe/migration_<< parameters.workflow_id >>)
+            if ((success_migrations == 1));
             then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
+              cd  ~/project/backend
+              npm install
+              npm run migrations:revert
             fi
             
 jobs:
@@ -255,7 +250,7 @@ jobs:
             fi
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
-
+          when: on_fail
   
   deploy-frontend:
     docker:
@@ -303,6 +298,7 @@ jobs:
             aws s3 sync frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
       - revert-migrations:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
 
@@ -352,7 +348,6 @@ jobs:
             cd .. 
             tar -C backend -czvf artifact.tar.gz .
 
-            # cd ~/project/.circleci/ansible
             ansible-playbook -i inventory deploy-backend.yml
             sleep 30s
             
