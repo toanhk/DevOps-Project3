@@ -30,7 +30,7 @@ commands:
           when: on_fail
           working_directory: ./backend
           command: |
-            SUCCESS=$(curl --insecure  https://kvdb.io/9GE4jRtKznmVKRfvdBABBe/migration_<< parameters.workflow_id >>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/9GE4jRtKznmVKRfvdBABBe/migration_<< parameters.id >>)
             echo $SUCCESS
             if (( $SUCCESS == 1 ));
             then
