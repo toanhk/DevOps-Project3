@@ -303,7 +303,7 @@ jobs:
       - checkout
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
-          at: .
+          at: ~/
       - add_ssh_keys:
           fingerprints:
             - "56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"
@@ -330,18 +330,23 @@ jobs:
             echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> backend/.env
             echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> backend/.env  
       - run:
-          name: Deploy backend and run ansible
-          command: |
-            cd backend
-            npm i
-            npm run build
-            ls
-            pwd
-            cd .. 
-            tar -C backend -czvf artifact.tar.gz .
+          # name: Deploy backend and run ansible
+          # command: |
+          #   cd backend
+          #   npm i
+          #   npm run build
+          #   ls
+          #   pwd
+          #   cd .. 
+          #   tar -C backend -czvf artifact.tar.gz .
 
-            ansible-playbook -i inventory .circleci/ansible/deploy-backend.yml
-            sleep 30s
+          #   ansible-playbook -i inventory .circleci/ansible/deploy-backend.yml
+          #   sleep 30s
+          name: Deploy backend
+          working_directory: ./.circleci/ansible
+          command: |
+            cat inventory
+            ansible-playbook -i inventory deploy-backend.yml -vv
             
       # Here's where you will add some code to rollback on failure  
       - destroy-environment:
