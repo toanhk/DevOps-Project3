@@ -251,20 +251,9 @@ jobs:
           no_output_timeout: 10m
           command: |
             cd backend
-            #export
-            echo "Step 1"
             npm install
-            echo "Step 2"
-            # npm audit fix
-            npm audit fix --force
-            echo "Step 3"
-            npm run build
-            #echo "Step 4"
-            #touch mig_results.txt
-            echo "Step 4"
             npm run migrations > mig_results.txt
-            echo "Step 6"
-            #cat mig_results.txt
+            cat mig_results.txt
       - run:
           name: save migrations
           command: |
@@ -280,51 +269,99 @@ jobs:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   deploy-frontend:
+    # docker:
+    #   - image: amazon/aws-cli
+    # steps:
+    #   - checkout
+    #   - run:
+    #       name: Install dependencies
+    #       command: |
+    #         yum -y install tar gzip 
+    #         curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
+    #         yum -y install nodejs 
+    #         echo ENVIRONMENT=production  >> "frontend/.env" 
+    #         echo NODE_ENV=production >> "frontend/.env"
+    #         cat "frontend/.env"
+    #   - attach_workspace:
+    #       at: ~/
+
+    #   - run:
+    #       name: Get backend url
+    #       command: |
+    #         # your code here
+    #         ls -l ~/
+    #         export BACKEND_IP=$(aws ec2 describe-instances \
+    #           --query "Reservations[*].Instances[*].PublicIpAddress" \
+    #           --filters "Name=tag:project,Values=Udacity-Project3" \
+    #           --output=text)
+            
+    #         export API_URL="http://${BACKEND_IP}:3030"
+    #         echo "${API_URL}"    
+    #         echo API_URL=$API_URL >> "frontend/.env"
+    #         echo ENVIRONMENT=production  >> "frontend/.env" 
+    #         echo NODE_ENV=production >> "frontend/.env"
+    #         cat "frontend/.env"
+       
+    #   - run:
+    #       name: Deploy frontend objects
+    #       command: |
+    #         # your code here
+    #         cd frontend
+    #         npm install
+    #         npm run build
+    #         tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+    #         aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+    #   - revert-migrations:
+    #       workflow_id: ${CIRCLE_WORKFLOW_ID}
+    #   - destroy-environment:
+    #       workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
     docker:
       - image: amazon/aws-cli
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install dependencies Node
           command: |
-            yum -y install tar gzip 
-            curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
-            yum -y install nodejs 
-            echo ENVIRONMENT=production  >> "frontend/.env" 
-            echo NODE_ENV=production >> "frontend/.env"
-            cat "frontend/.env"
-      - attach_workspace:
-          at: ~/
-
+            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
+            yum -y install nodejs
+            node -v
       - run:
-          name: Get backend url
+          name: Install dependencies tar
           command: |
-            # your code here
-            ls -l ~/
+            yum -y install tar
+      - run:
+          name: Install dependencies gzip
+          command: |
+            yum -y install gzip
+      - run:
+          name: Set env variables
+          command: |
+            # your code here also added filters
             export BACKEND_IP=$(aws ec2 describe-instances \
-              --query "Reservations[*].Instances[*].PublicIpAddress" \
-              --filters "Name=tag:project,Values=Udacity-Project3" \
-              --output=text)
-            
+            --filters Name=tag:Name,Values="backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --output text)
             export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"    
-            echo API_URL=$API_URL >> "frontend/.env"
-            echo ENVIRONMENT=production  >> "frontend/.env" 
-            echo NODE_ENV=production >> "frontend/.env"
-            cat "frontend/.env"
-       
+            echo "${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      - run:
+          name: Build frontend objects
+          command: |
+            npm install webpack-dev-server -g
+            cd frontend
+            npm i
+            npm run build
+            npm audit fix --force --audit-level=critical
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
       - run:
           name: Deploy frontend objects
           command: |
-            # your code here
-            cd frontend
-            npm install
-            npm run build
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      - revert-migrations:
-          workflow_id: ${CIRCLE_WORKFLOW_ID}
+            aws s3 sync frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
       - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   deploy-backend:
