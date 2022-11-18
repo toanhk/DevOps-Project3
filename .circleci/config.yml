@@ -465,9 +465,9 @@ jobs:
           name: Backend smoke test.
           command: |
             export BACKEND_URL=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=Udacity-Project3" --output text)
-            echo http://${BACKEND_URL}:3030/api/status
+            echo https://${BACKEND_URL}:3030/api/status
             if 
-            curl -s http://${BACKEND_URL}:3030/api/status | grep "ok"
+            curl -s https://${BACKEND_URL}:3030/api/status | grep "ok"
             then
               exit 0
             else
