@@ -501,32 +501,27 @@ jobs:
       # Checkout code from git
       - checkout
       - run:
-          name: Install dependencies
-          command: |
-            yum -y install tar gzip 
-      - attach_workspace:
-            at: ~/
-      - run:
-          name: Install dependencies
-          command: |
-            yum -y install tar gzip 
-            curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
-            yum -y install nodejs 
-      - run:
           name: Update cloudfront distribution
           command: |
-            # your code here
-            # Change the initial stack name, as applicable to you
+            
             export oldWorkflowID=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --region us-west-2 --no-paginate --output text)
             echo $oldWorkflowID >> oldWorkflowID.txt
             echo "oldWorkflowID is -------"
             cat oldWorkflowID.txt
             echo Current workflow ID ${CIRCLE_WORKFLOW_ID:0:7}
+            # aws cloudformation deploy \
+            #   --template-file .circleci/files/cloudfront.yml \
+            #   --stack-name Udacity-Project3-Cloudfront \
+            #   --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+            #   --tags project=udapeople
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            echo ${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
-              --stack-name Udacity-Project3-Cloudfront \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
-              --tags project=udapeople
+              --stack-name udapeople-cloudfont        
       # Here's where you will add some code to rollback on failure  
       - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID}
