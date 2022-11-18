@@ -194,7 +194,7 @@ jobs:
               --query "Reservations[*].Instances[*].PublicIpAddress" \
               --filters "Name=tag:project,Values=Udacity-Project3" \
               --output=text)
-            echo $backendip >> .circleci/ansible/inventory.txt
+            echo $backendip >> inventory.txt
             cat inventory.txt
       - persist_to_workspace:
           root: ~/
@@ -336,7 +336,7 @@ jobs:
       # Add ssh keys with fingerprint
       - add_ssh_keys:
           fingerprints:
-              - "1f:6e:83:96:b2:bf:39:73:0f:b9:f1:dd:c9:95:e1:95"
+              - "56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"
       # attach workspace
       - attach_workspace:
             at: ~/
@@ -392,7 +392,6 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            # your code here
             cd .circleci/ansible
             backendip=$(aws ec2 describe-instances \
               --query "Reservations[*].Instances[*].PublicIpAddress" \
@@ -441,7 +440,7 @@ jobs:
           command: |
             # your code here
             #http://udapeople-595df6d.s3.amazonaws.com/index.html#/employees
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-2.amazonaws.com/#/employees"            
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-west-2.amazonaws.com/#/employees"            
             echo ${URL} 
             if curl -s ${URL} | grep "Welcome"
             then
