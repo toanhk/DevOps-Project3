@@ -252,12 +252,12 @@ jobs:
           command: |
             cd backend
             #export
-            echo "Step 1"
+            # echo "Step 1"
             npm install
-            echo "Step 2"
-            npm audit fix
-            echo "Step 3"
-            npm run build
+            # echo "Step 2"
+            # npm audit fix
+            # echo "Step 3"
+            # npm run build
             #echo "Step 4"
             #touch mig_results.txt
             echo "Step 4"
