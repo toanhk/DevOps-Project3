@@ -252,12 +252,13 @@ jobs:
           command: |
             cd backend
             #export
-            # echo "Step 1"
+            echo "Step 1"
             npm install
-            # echo "Step 2"
+            echo "Step 2"
             # npm audit fix
-            # echo "Step 3"
-            # npm run build
+            npm audit fix --force
+            echo "Step 3"
+            npm run build
             #echo "Step 4"
             #touch mig_results.txt
             echo "Step 4"
@@ -479,7 +480,7 @@ jobs:
           command: |
             # your code here
             # Change the initial stack name, as applicable to you
-            export oldWorkflowID=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --region us-east-1 --no-paginate --output text)
+            export oldWorkflowID=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --region us-west-2 --no-paginate --output text)
             echo $oldWorkflowID >> oldWorkflowID.txt
             echo "oldWorkflowID is -------"
             cat oldWorkflowID.txt
