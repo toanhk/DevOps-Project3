@@ -303,7 +303,7 @@ jobs:
       - checkout
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
-          at: ~/
+          at: .
       - add_ssh_keys:
           fingerprints:
             - "56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"
