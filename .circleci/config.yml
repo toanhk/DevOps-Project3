@@ -231,6 +231,7 @@ jobs:
           at: .
       - run:
           name: Run migrations
+          working_directory: ./backend
           command: |
             cd backend
             npm install
