@@ -313,54 +313,129 @@ jobs:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   deploy-backend:
-    docker:
-      - image: cimg/python:3.10.6
+    # docker:
+    #   - image: cimg/python:3.10.6
 
+    # steps:
+    #   - checkout
+    #   - attach_workspace:
+    #       # Must be absolute path or relative path from working_directory
+    #       at: ~/
+    #   - add_ssh_keys:
+    #       fingerprints:
+    #         - "56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"
+      
+    #   - run:
+    #       name: Install dependencies
+    #       command: |
+    #         python3 -m pip install --user ansible
+    #         sudo apt update
+    #         sudo apt install nodejs
+    #         sudo apt install npm
+    #   - run:
+    #       name: Add env vars to env file
+    #       command: |
+    #         echo "NODE_ENV=production" >> backend/.env
+    #         echo "VERSION=1" >> backend/.env
+    #         echo "TYPEORM_CONNECTION=${TYPEORM_CONNECTION}" >> backend/.env
+    #         echo "TYPEORM_MIGRATIONS_DIR=${TYPEORM_MIGRATIONS_DIR}" >> backend/.env
+    #         echo "TYPEORM_ENTITIES=${TYPEORM_ENTITIES}" >> backend/.env
+    #         echo "TYPEORM_MIGRATIONS=${TYPEORM_MIGRATIONS}" >> backend/.env
+    #         echo "TYPEORM_HOST=${TYPEORM_HOST}" >> backend/.env
+    #         echo "TYPEORM_PORT=${TYPEORM_PORT}" >> backend/.env
+    #         echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> backend/.env
+    #         echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> backend/.env
+    #         echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> backend/.env  
+    #   - run:
+    #       name: Deploy backend and run ansible
+    #       command: |
+    #         cd backend
+    #         npm i
+    #         npm run build
+    #         ls
+    #         pwd
+    #         cd .. 
+    #         tar -C backend -czvf artifact.tar.gz .
+
+    #         cd ~/project/.circleci/ansible
+    #         ansible-playbook -i inventory.txt deploy-backend.yml
+    #         sleep 30s
+    docker:
+      # Docker image here that supports Ansible
+      - image: python:3.7-alpine3.11
     steps:
+      # Checkout code from git
       - checkout
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: ~/
+      # Add ssh keys with fingerprint
       - add_ssh_keys:
           fingerprints:
-            - "56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"
-      
+              - "56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"
+      # attach workspace
+      - attach_workspace:
+            at: ~/
       - run:
           name: Install dependencies
           command: |
-            python3 -m pip install --user ansible
-            sudo apt update
-            sudo apt install nodejs
-            sudo apt install npm
+            apk add --update tar gzip ansible nodejs npm curl zip
+            pip install awscli
+            npm install
+            
       - run:
-          name: Add env vars to env file
+          name: create .env files
           command: |
-            echo "NODE_ENV=production" >> backend/.env
-            echo "VERSION=1" >> backend/.env
-            echo "TYPEORM_CONNECTION=${TYPEORM_CONNECTION}" >> backend/.env
-            echo "TYPEORM_MIGRATIONS_DIR=${TYPEORM_MIGRATIONS_DIR}" >> backend/.env
-            echo "TYPEORM_ENTITIES=${TYPEORM_ENTITIES}" >> backend/.env
-            echo "TYPEORM_MIGRATIONS=${TYPEORM_MIGRATIONS}" >> backend/.env
-            echo "TYPEORM_HOST=${TYPEORM_HOST}" >> backend/.env
-            echo "TYPEORM_PORT=${TYPEORM_PORT}" >> backend/.env
-            echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> backend/.env
-            echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> backend/.env
-            echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> backend/.env  
+            echo NODE_ENV=production > "backend/.env"
+            echo VERSION=1 >> "backend/.env"
+            echo ENVIROMENT=development >> "backend/.env"
+            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo TYPEORM_ENTITIES=./src/modules/**/*.entity.ts >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
       - run:
-          name: Deploy backend and run ansible
+          name: install node modules
           command: |
+            cd /root/project/backend
+            npm install
+      - run:
+          name: zip backend files
+          command: |
+            pwd
             cd backend
             npm i
             npm run build
-            ls
+            cd ..
             pwd
-            cd .. 
-            tar -C backend -czvf artifact.tar.gz .
-
-            cd ~/project/.circleci/ansible
-            ansible-playbook -i inventory.txt deploy-backend.yml
-            sleep 30s
-            
+            tar czf backend.tar.gz backend
+            ls -l 
+            cd .circleci/ansible/roles/deploy
+            mkdir files
+            #sudo chmod 777 files
+            cd /root/project/
+            cp backend.tar.gz .circleci/ansible/roles/deploy/files/
+            ls -l
+            #mv backend.tar.gz /home/ubuntu
+            #cd /home/ubuntu
+            #ls -l
+            #cp backend.tar.gz /home/ubuntu
+            #cp backend.tar.gz ~/
+      - run:
+          name: Deploy backend
+          command: |
+            cd .circleci/ansible
+            backendip=$(aws ec2 describe-instances \
+              --query "Reservations[*].Instances[*].PublicIpAddress" \
+              --filters "Name=tag:project,Values=Udacity-Project3" \
+              --output=text)
+            ls -l -a
+            #echo $backendip >> .circleci/ansible/inventory.txt
+            echo $backendip >> inventory.txt
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml        
       ## Here's where you will add some code to rollback on failure  
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
