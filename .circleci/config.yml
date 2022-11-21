@@ -477,12 +477,11 @@ jobs:
                 echo "nothing to clean up........."
               fi
             fi
-
+            
 workflows:
   default:
     jobs:
       - build-frontend
-          # context: slack-secrets
       - build-backend
       - test-frontend:
           requires: [build-frontend]
@@ -492,11 +491,14 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
+
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
-              only: [main]
+              only: 
+                - circleci-project-setup
+
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
@@ -506,9 +508,9 @@ workflows:
       - deploy-backend:
           requires: [run-migrations]
       - smoke-test:
-         requires: [deploy-backend, deploy-frontend]
+          requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
-         requires: [smoke-test]
+          requires: [smoke-test]
       - cleanup:
           requires: [cloudfront-update]
             
