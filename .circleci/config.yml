@@ -160,6 +160,7 @@ jobs:
     docker:
       - image: amazon/aws-cli:latest
     steps:
+      ## Checkout code from git
       - checkout
       - run:
           name: Install tar/gzip utility
@@ -327,24 +328,17 @@ jobs:
           at: .
       - run:
           name: Install dependencies
-          # working_directory: /tmp
+          working_directory: /tmp
           command: |
-            # apk add --update ansible curl rsync openssh nodejs npm
-            # ansible --version
-            # pip install awscli
-            # aws --version
-
-            python3 -m pip install --user ansible
-            sudo apt update
-            sudo apt install nodejs
-            sudo apt install npm
+            apk add --update ansible curl rsync openssh nodejs npm
+            ansible --version
+            pip install awscli
+            aws --version
       - run:
           name: Deploy backend
           working_directory: ./.circleci/ansible
           command: |
-            # cat inventory.txt
-            npm i
-            npm run build
+            cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
             
       - destroy-environment:
