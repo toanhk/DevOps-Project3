@@ -1,7 +1,7 @@
 version: 2.1
 
-orbs: 
-  slack: circleci/slack@4.10.1
+# orbs: 
+#   slack: circleci/slack@4.10.1
 
 commands:
   destroy-environment:
@@ -211,7 +211,7 @@ jobs:
       # attach workspace
       - checkout
       - add_ssh_keys:
-          fingerprints: ["16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
           at: ~/
       - run:
@@ -323,7 +323,7 @@ jobs:
           at: ~/
       - add_ssh_keys:
           fingerprints:
-            - "16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"
+            - "56:45:6c:95:54:e6:99:3e:e3:e8:53:3b:7c:22:3d:8d"
       
       - run:
           name: Install dependencies
